@@ -1,0 +1,45 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Perfil - LOS ROLONES</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+</head>
+<body>
+  <div class="auth">
+    <h2>LOS ROLONES — Mi perfil</h2>
+    <div id="profileArea">Cargando...</div>
+    <p><a href="/">Volver al feed</a></p>
+  </div>
+  <script>
+    async function api(path, opts={}){ const res = await fetch('/api'+path, Object.assign({headers:{'Content-Type':'application/json'}, credentials:'same-origin'}, opts)); if (!res.ok) throw new Error(await res.text()); return res.json(); }
+    (async ()=>{
+      try{
+        const me = await api('/me');
+        if (!me.user) return location.href='/login.html';
+        const p = document.getElementById('profileArea');
+        p.innerHTML = '';
+  const img = document.createElement('img'); img.src = me.user.avatar || '/logo2.png'; img.className='avatar large';
+        p.appendChild(img);
+        const file = document.createElement('input'); file.type='file'; file.accept='image/*';
+        const btn = document.createElement('button'); btn.textContent='Subir avatar';
+        btn.addEventListener('click', async ()=>{
+          if (!file.files[0]) return alert('elige imagen');
+          const f = file.files[0];
+          const fd = new FormData(); fd.append('avatar', f);
+          try{
+            const res = await fetch('/api/me/avatar-file', {method:'POST', body: fd, credentials:'same-origin'});
+            if (!res.ok) throw new Error(await res.text());
+            location.reload();
+          }catch(e){ alert('Error: '+e.message); }
+        });
+        p.appendChild(file);
+        p.appendChild(btn);
+      }catch(e){ alert('error: '+e.message); }
+    })();
+  </script>
+</body>
+</html>

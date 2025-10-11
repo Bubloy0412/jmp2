@@ -1,0 +1,71 @@
+{
+  "users": [
+    {
+      "id": 1,
+      "username": "demo",
+      "password_hash": "$2a$10$u1bQK1qzH5p/9YQb6G/2Hee6fFQf6pQ4G8ZxT8x1qQ8r4h3XqYbG6"
+    },
+    {
+      "id": 2,
+      "username": "testuser",
+      "password_hash": "$2a$10$UenDA5SBbVogZ3fBGZE1pO.kQxnVVYPBC.JlroIVBplHjKypF.09C",
+      "avatar": "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII="
+    }
+  ],
+  "nextUserId": 3,
+  "posts": [
+    {
+      "id": 1,
+      "author": "Jose Miguel",
+      "content": "Nada",
+      "created_at": "2025-10-11T14:13:06.238Z",
+      "likes": 5
+    },
+    {
+      "id": 2,
+      "author": "antonio",
+      "content": "te amo",
+      "created_at": "2025-10-11T14:14:05.413Z",
+      "likes": 0
+    },
+    {
+      "id": 3,
+      "author": "Jorgi",
+      "content": "Soy gay",
+      "created_at": "2025-10-11T14:14:35.730Z",
+      "likes": 0
+    },
+    {
+      "id": 4,
+      "author": "Justin Asm",
+      "content": "yo tambien",
+      "created_at": "2025-10-11T14:44:26.878Z",
+      "likes": 0
+    },
+    {
+      "id": 5,
+      "author": "testuser",
+      "content": "Post de prueba desde E2E",
+      "created_at": "2025-10-11T15:07:49.589Z",
+      "likes": 1
+    }
+  ],
+  "comments": [
+    {
+      "id": 1,
+      "post_id": 1,
+      "author": "Anon",
+      "text": "hola",
+      "created_at": "2025-10-11T14:13:30.590Z"
+    },
+    {
+      "id": 2,
+      "post_id": 5,
+      "author": "testuser",
+      "text": "Comentario E2E",
+      "created_at": "2025-10-11T15:07:49.604Z"
+    }
+  ],
+  "nextPostId": 6,
+  "nextCommentId": 3
+}

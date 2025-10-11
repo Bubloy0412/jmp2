@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Register - LOS ROLONES</title>
+  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <link rel="stylesheet" href="/styles.css">
+  <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+  <link rel="shortcut icon" href="/favicon.ico">
+</head>
+<body>
+  <div class="auth">
+    <h2>LOS ROLONES — Regístrate</h2>
+    <input id="username" placeholder="Usuario">
+    <input id="password" type="password" placeholder="Contraseña">
+    <button id="regBtn">Crear cuenta</button>
+    <p>¿Ya tienes cuenta? <a href="/login.html">Entrar</a></p>
+  </div>
+  <script>
+    async function api(path, opts={}){ const res = await fetch('/api'+path, Object.assign({headers:{'Content-Type':'application/json'}, credentials:'same-origin'}, opts)); if (!res.ok) throw new Error(await res.text()); return res.json(); }
+    document.getElementById('regBtn').addEventListener('click', async ()=>{
+      const username = document.getElementById('username').value.trim();
+      const password = document.getElementById('password').value;
+      if (!username || !password) return alert('completa ambos campos');
+      try{ await api('/register',{method:'POST', body: JSON.stringify({username,password})}); location.href = '/'; }catch(e){ alert('error: '+e.message); }
+    });
+  </script>
+</body>
+</html>
