@@ -1,6 +1,12 @@
-# TODO: Modernize Web UI with Modern Colors and Backgrounds
+# TODO: Publicar página web en hosting
 
-## Steps to Complete
-- [x] Update public/styles.css: Add CSS variables for modern dark theme, change body to dark gradient background, update #app to dark with transparency, change text to light, modernize buttons with gradients and hover effects, add transitions.
-- [x] Test: Server already running on port 3000, modern dark theme applied with gradient backgrounds, light text, gradient buttons, and hover effects.
-- [x] Mark complete: Update this file with checkmarks as steps are done.
+## Pasos para desplegar la app en Render
+
+- [ ] Preparar la app para producción: Verificar scripts en package.json y ajustes en server.js
+- [ ] Crear .env.example con variables de entorno necesarias
+- [ ] Inicializar repositorio Git y configurar .gitignore
+- [ ] Subir código a GitHub
+- [ ] Crear cuenta en Render y conectar repositorio
+- [ ] Configurar despliegue: comandos de build/start, variables de entorno
+- [ ] Desplegar y probar la app en línea
+- [ ] Compartir URL con amigos

@@ -14,21 +14,64 @@
   <span class="logo">LR</span>
   <h1>LOS ROLONES</h1>
       </div>
+      <div class="search-area">
+        <input type="text" placeholder="Buscar..." id="searchInput">
+        <div id="searchDropdown" class="search-dropdown">
+          <div class="search-results">
+            <div class="posts-section">
+              <h4>Posts</h4>
+              <div id="searchPosts"></div>
+            </div>
+            <div class="users-section">
+              <h4>Usuarios</h4>
+              <div id="searchUsers"></div>
+            </div>
+          </div>
+        </div>
+      </div>
       <div class="user-area" id="userArea">
         <!-- login/register links or user info will be injected -->
       </div>
     </header>
 
     <main>
-      <section id="composer">
-        <textarea id="content" placeholder="\u00bfQu\u00e9 est\u00e1s pensando?\"></textarea>
-        <button id="postBtn">Publicar</button>
-        <div id="adminArea" class="admin-area">
-          <button id="cleanupBtn" class="danger">Limpiar uploads no referenciados</button>
-          <span id="cleanupResult" class="cleanup-result"></span>
-        </div>
+      <aside class="sidebar left-sidebar">
+        <nav>
+          <a href="/profile.html"><span class="nav-icon">👤</span> Perfil</a>
+          <a href="#"><span class="nav-icon">👥</span> Amigos</a>
+          <a href="#"><span class="nav-icon">💬</span> Mensajes</a>
+          <a href="#"><span class="nav-icon">⚙️</span> Configuración</a>
+        </nav>
+      </aside>
+      <section class="feed-container">
+        <section id="composer">
+          <div id="userAvatarThumb" class="user-avatar-thumb"></div>
+          <textarea id="content" placeholder="\u00bfQu\u00e9 rol\u00f3n vas a compartir hoy?"></textarea>
+          <label for="fileInput" class="file-label">Seleccionar imagen</label>
+          <input type="file" id="fileInput" accept="image/*" class="file-input">
+          <button id="postBtn">Publicar Rolón</button>
+          <div id="adminArea" class="admin-area">
+            <button id="cleanupBtn" class="danger">Limpiar uploads no referenciados</button>
+            <span id="cleanupResult" class="cleanup-result"></span>
+          </div>
+        </section>
+        <section id="feed"></section>
       </section>
-      <section id="feed"></section>
+      <aside class="sidebar right-sidebar">
+        <div class="suggestions">
+          <h3>Sugerencias de Amigos</h3>
+          <p>Próximamente...</p>
+        </div>
+        <div class="trends">
+          <h3>Tendencias</h3>
+          <ul>
+            <li><a href="#">#RolónDelDía</a></li>
+            <li><a href="#">#Tusa2025</a></li>
+            <li><a href="#">Tendencias de Cumbia</a></li>
+            <li><a href="#">#ReggaetonVibes</a></li>
+          </ul>
+        </div>
+      </aside>
     </main>
   </div>
   <script src="/app.js"></script>

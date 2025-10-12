@@ -1,3 +1,4 @@
+require('dotenv').config();
 const express = require('express');
 const path = require('path');
 const bodyParser = require('body-parser');
@@ -8,6 +9,10 @@ const bcrypt = require('bcryptjs');
 const db = require('./db');
 const fs = require('fs');
 const multer = require('multer');
+const helmet = require('helmet');
+const rateLimit = require('express-rate-limit');
+const winston = require('winston');
+const Joi = require('joi');
 
 // ensure uploads folder
 const UPLOADS_DIR = path.join(__dirname, 'public', 'uploads');
@@ -27,18 +32,31 @@ const fileFilter = (req, file, cb) => {
 const upload = multer({storage, fileFilter, limits: { fileSize: 200 * 1024 }}); // 200 KB
 
 const app = express();
+app.use(helmet());
 app.use(cors());
 app.use(bodyParser.json());
 app.use(cookieParser());
 
+// Rate limiting
+const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 }); // 100 requests per 15 minutes per IP
+app.use(limiter);
+
 app.use('/uploads', express.static(path.join(__dirname, 'public', 'uploads')));
 
+const csrf = require('csurf');
+
 app.use(session({
-  secret: 'dev-secret-change-me',
+  secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
   resave: false,
   saveUninitialized: false,
-  cookie: { maxAge: 1000 * 60 * 60 * 24 }
+  cookie: {
+    secure: process.env.NODE_ENV === 'production',
+    sameSite: process.env.NODE_ENV === 'production' ? 'none' : 'strict',
+    maxAge: 1000 * 60 * 60 * 24
+  }
 }));
+
+app.use(csrf({ cookie: true }));
 
 app.use(express.static(path.join(__dirname, 'public')));
 
@@ -177,9 +195,36 @@ app.post('/api/me/avatar-file', requireAuth, (req, res) => {
   });
 });
 
+// new endpoint: upload image for post
+app.post('/api/upload-post-image', requireAuth, (req, res) => {
+  upload.single('image')(req, res, async function(err){
+    if (err) return res.status(400).json({error: err.message});
+    if (!req.file) return res.status(400).json({error:'file required'});
+    try{
+      // process image: resize to max 800x800, keep aspect ratio, convert to jpeg
+      const imgBuffer = await sharp(req.file.buffer).resize(800,800,{fit:'inside', withoutEnlargement: true}).jpeg({quality:85}).toBuffer();
+      const filename = Date.now() + '-' + Math.random().toString(36).slice(2,8) + '.jpg';
+      const outPath = path.join(UPLOADS_DIR, filename);
+      fs.writeFileSync(outPath, imgBuffer);
+
+      const url = '/uploads/' + filename;
+      res.json({ok:true, imageUrl: url});
+    }catch(e){
+      console.error('post image processing error', e);
+      const msg = (e && e.message) ? e.message.toLowerCase() : '';
+      if (msg.includes('pngload') || msg.includes('input buffer contains an unknown format') || msg.includes('libspng') || msg.includes('jpegload') || msg.includes('libjpeg')){
+        return res.status(400).json({error: 'Invalid image file'});
+      }
+      res.status(500).json({error:'processing error'});
+    }
+  });
+});
+
 // API: obtener posts
 app.get('/api/posts', (req, res) => {
-  db.getPostsWithMeta().then(async posts => {
+  const limit = req.query.limit ? Number(req.query.limit) : null;
+  const offset = req.query.offset ? Number(req.query.offset) : 0;
+  db.getPosts(limit, offset).then(async posts => {
     const enriched = [];
     for(const p of posts){
       const u = await db.getUserByUsername(p.author);
@@ -242,11 +287,40 @@ setInterval(()=>{ cleanupUploads().then(r=>console.log('daily cleanup done', r))
 
 // API: crear post (requires auth)
 app.post('/api/posts', requireAuth, (req, res) => {
-  const {content} = req.body;
-  if (!content) return res.status(400).json({error: 'content required'});
+  const {content, image, music_url} = req.body;
+  if (!content && !image && !music_url) return res.status(400).json({error: 'content, image, or music_url required'});
   db.getUserById(req.session.userId).then(user=>{
-    return db.createPost(user.username, content);
+    return db.createPost(user.username, content, image, music_url);
   }).then(post=> res.json(post)).catch(e=> res.status(500).json({error:'db error'}));
+});
+
+// API: edit post (requires auth, only author)
+app.put('/api/posts/:id', requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  const {content, image, music_url} = req.body;
+  try{
+    const post = await db.getPostsWithMeta().then(posts => posts.find(p => p.id === id));
+    if (!post) return res.status(404).json({error: 'post not found'});
+    const user = await db.getUserById(req.session.userId);
+    if (post.author !== user.username) return res.status(403).json({error: 'not authorized'});
+    const ok = await db.editPost(id, content, image, music_url);
+    if (!ok) return res.status(404).json({error: 'post not found'});
+    res.json({ok: true});
+  }catch(e){ res.status(500).json({error:'db error'}); }
+});
+
+// API: delete post (requires auth, only author)
+app.delete('/api/posts/:id', requireAuth, async (req, res) => {
+  const id = Number(req.params.id);
+  try{
+    const post = await db.getPostsWithMeta().then(posts => posts.find(p => p.id === id));
+    if (!post) return res.status(404).json({error: 'post not found'});
+    const user = await db.getUserById(req.session.userId);
+    if (post.author !== user.username) return res.status(403).json({error: 'not authorized'});
+    const ok = await db.deletePost(id);
+    if (!ok) return res.status(404).json({error: 'post not found'});
+    res.json({ok: true});
+  }catch(e){ res.status(500).json({error:'db error'}); }
 });
 
 // API: like post
@@ -268,6 +342,18 @@ app.post('/api/posts/:id/comments', requireAuth, (req, res) => {
   }).then(comment=>{
     if (!comment) return res.status(404).json({error: 'post not found'});
     res.json(comment);
+  }).catch(e=> res.status(500).json({error:'db error'}));
+});
+
+// API: search posts and users
+app.get('/api/search', (req, res) => {
+  const q = req.query.q;
+  if (!q) return res.status(400).json({error: 'query required'});
+  Promise.all([
+    db.searchPosts(q),
+    db.searchUsers(q)
+  ]).then(([posts, users]) => {
+    res.json({posts, users});
   }).catch(e=> res.status(500).json({error:'db error'}));
 });
 
