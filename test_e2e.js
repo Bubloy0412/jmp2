@@ -18,6 +18,23 @@ function req(method, path, body, cookie){
   });
 }
 
+function extractCookies(headers){
+  const setCookie = headers['set-cookie'];
+  if (!setCookie) return '';
+  return setCookie.map(c => c.split(';')[0]).join('; ');
+}
+
+async function getCsrfToken(){
+  const r = await req('GET','/');
+  // CSRF token is in a cookie, not in HTML
+  const setCookie = r.headers['set-cookie'];
+  if (!setCookie) throw new Error('No CSRF cookie found');
+  const csrfCookie = setCookie.find(c => c.startsWith('_csrf='));
+  if (!csrfCookie) throw new Error('CSRF cookie not found');
+  const token = csrfCookie.split(';')[0].split('=')[1];
+  return token;
+}
+
 (async ()=>{
   try{
     console.log('1) GET /api/me (sin cookie)');
@@ -25,22 +42,23 @@ function req(method, path, body, cookie){
     console.log(r.status, r.body);
 
     console.log('\n2) POST /api/register (crear cuenta testuser)');
-    r = await req('POST','/api/register',{username:'testuser', password:'testpass'});
+    const csrfToken = await getCsrfToken();
+    r = await req('POST','/api/register',{username:'testuser', password:'testpass', _csrf: csrfToken});
     console.log(r.status, r.body);
     const setCookie = r.headers['set-cookie'];
     let cookie;
     if (!setCookie){
       console.log('Registro no devolvió cookie, intentando login (posible usuario ya existente)');
-      const lr = await req('POST','/api/login',{username:'testuser', password:'testpass'});
+      const lr = await req('POST','/api/login',{username:'testuser', password:'testpass', _csrf: csrfToken});
       if (lr.status !== 200){
         return console.error('No se pudo obtener cookie por registro ni login', lr.status, lr.body);
       }
       const sc = lr.headers['set-cookie'];
       if (!sc) return console.error('Login no devolvió cookie');
-      cookie = sc.map(s => s.split(';')[0]).join('; ');
+      cookie = extractCookies(sc);
       console.log('Cookie obtenida por login:', cookie);
     } else {
-      cookie = setCookie.map(s => s.split(';')[0]).join('; ');
+      cookie = extractCookies(setCookie);
       console.log('Cookie capturada en register:', cookie);
     }
 

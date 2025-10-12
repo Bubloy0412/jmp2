@@ -48,7 +48,7 @@ const csrf = require('csurf');
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
-  store: new SQLiteStore({ db: 'sessions.db', dir: __dirname }),
+  store: new SQLiteStore({ db: 'sessions.db', dir: process.env.NODE_ENV === 'production' ? '/tmp' : __dirname }),
   resave: false,
   saveUninitialized: false,
   cookie: {

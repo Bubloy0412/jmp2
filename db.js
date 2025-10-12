@@ -5,7 +5,7 @@ const { open } = require('sqlite');
 const bcrypt = require('bcryptjs');
 
 const DATA_JSON = path.join(__dirname, 'data.json');
-const DB_FILE = path.join(__dirname, 'data.sqlite');
+const DB_FILE = process.env.NODE_ENV === 'production' ? '/tmp/data.sqlite' : path.join(__dirname, 'data.sqlite');
 
 let db;
 
