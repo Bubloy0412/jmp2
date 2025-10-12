@@ -4,6 +4,7 @@ const path = require('path');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const session = require('express-session');
+const SQLiteStore = require('connect-sqlite3')(session);
 const cookieParser = require('cookie-parser');
 const bcrypt = require('bcryptjs');
 const db = require('./db');
@@ -47,6 +48,7 @@ const csrf = require('csurf');
 
 app.use(session({
   secret: process.env.SESSION_SECRET || 'dev-secret-change-me',
+  store: new SQLiteStore({ db: 'sessions.db', dir: __dirname }),
   resave: false,
   saveUninitialized: false,
   cookie: {
