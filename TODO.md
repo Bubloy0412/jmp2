@@ -1,12 +1,13 @@
-# TODO: Publicar página web en hosting
+# Fix Segmentation Fault on Render Deployment
 
-## Pasos para desplegar la app en Render
+## Tasks
+- [x] Update sharp to latest version in package.json
+- [x] Add postinstall script to rebuild sharp for deployment platform
+- [x] Test the changes locally (server starts without segfault, basic endpoints work)
+- [ ] Deploy to Render to verify fix
 
-- [x] Preparar la app para producción: Verificar scripts en package.json y ajustes en server.js
-- [x] Crear .env.example con variables de entorno necesarias
-- [x] Inicializar repositorio Git y configurar .gitignore
-- [x] Subir código a GitHub
-- [ ] Crear cuenta en Render y conectar repositorio
-- [ ] Configurar despliegue: comandos de build/start, variables de entorno
-- [ ] Desplegar y probar la app en línea
-- [ ] Compartir URL con amigos
+## Notes
+- Segmentation fault likely due to sharp native binaries incompatibility on Render's Node.js 22.16.0 environment
+- Postinstall rebuild ensures binaries are compiled for the target platform
+- Local testing shows server starts successfully and basic endpoints respond (health check, posts retrieval)
+- CSRF protection blocks unauthenticated POST requests, which is expected behavior
